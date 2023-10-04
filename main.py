@@ -1,5 +1,7 @@
-import random
 from pyncm.apis.login import LoginViaAnonymousAccount
+from colorama import init, Fore
+from utils import randstr
+import random
 import pyncm.apis
 import platform
 import requests
@@ -8,13 +10,11 @@ import os
 import sys
 import json
 import easygui
-from colorama import init, Fore
 import win32api
 import processlib
 import traceback
-from utils import randstr
 
-version = "1.2.1"
+version = "1.2.2"
 
 # This version of LiveMSC was written by SteveUbuntu using python3 and is 100% compatible with Windows 7 and newer./
 # The original version of LiveMSC is written in Java, by [Kkforkd], under the GNU v3 open source license.
@@ -96,9 +96,27 @@ def callmpg123():
 
 def play(msc):
     print("正在搜索:", Fore.BLUE + msc + Fore.RESET)
-    tracks = pyncm.apis.cloudsearch.GetSearchResult(msc)
     # Search for music and pick the first one to play
     # song title
+    if "id:" == msc[0:3]:
+        try:
+            url = pyncm.apis.track.GetTrackAudio(msc[3:])
+            if url["data"][0]["url"] is None:
+                print(Fore.RED + "歌曲已下架或需要 VIP。", Fore.RESET)
+                return 0
+            else:
+                content = requests.get((url["data"][0]["url"])).content
+                with open("temp.mp3", "wb") as f:
+                    print("\n正在下载音频文件。。。")    
+                    f.write(content)
+                    
+                with open("./PLiveMSCdl/id_" + msc[3:] + ".mp3", "wb") as fa:
+                    fa.write(content)
+                print(f"开始播放 ID 歌曲。：{Fore.BLUE}{msc[3:]}{Fore.RESET}\n", end="")
+                return 0
+        except IndexError:
+            print(Fore.RED + "无法下载。", Fore.RESET)  
+    tracks = pyncm.apis.cloudsearch.GetSearchResult(msc)
     if not tracks["code"] == 200:
         return 2
     if skip_vip is True:
@@ -308,7 +326,7 @@ try:
                     if timeline != latest_timeline:
                         timeline = latest_timeline
                         if "点歌" in latest_message:
-                            print("用户", Fore.BLUE + latest_user + Fore.RESET, "触发了点歌:", Fore.YELLOW + latest_message.split("点歌")[-1][1:].strip("\\r") + Fore.RESET, "，已加入到点歌列表。")
+                            print("用户", Fore.BLUE + latest_user + Fore.RESET, "触发了点歌:", Fore.YELLOW + latest_message.split("点歌")[-1][1:].strip("\r") + Fore.RESET, "，已加入到点歌列表。")
                             musiclist.append(latest_message.split("点歌")[-1][1:].strip("\r"))
                             line()
                             showlist()
