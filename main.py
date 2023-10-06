@@ -14,7 +14,10 @@ import win32api
 import processlib
 import traceback
 
-version = "1.2.2"
+version = "1.2.3"
+
+if platform.system() == "Windows":
+    win32api.SetConsoleTitle(f"PLiveMSC {version} by @Stevesuk0")
 
 # This version of LiveMSC was written by SteveUbuntu using python3 and is 100% compatible with Windows 7 and newer./
 # The original version of LiveMSC is written in Java, by [Kkforkd], under the GNU v3 open source license.
@@ -32,7 +35,6 @@ version = "1.2.2"
 # easygui --- pop-up window
 # -==============================- 
 
-win32api.SetConsoleTitle(f"PLiveMSC {version}: by Stevesuk")
 
 def line():
     print("================================")
@@ -256,7 +258,7 @@ def dl(msc):
 
     try:
         for b in range(len(tracks["result"]["songs"])-1):
-            print(Fore.GREEN + str(b + 1) + Fore.RESET + ". " + Fore.BLUE + tracks["result"]["songs"][b]["name"] + Fore.RESET + " (" + Fore.RED + str(tracks["result"]["songs"][b]["id"]) + Fore.RESET + ")", end=" - ")
+            print(Fore.GREEN + str(b) + Fore.RESET + ". " + Fore.BLUE + tracks["result"]["songs"][b]["name"] + Fore.RESET + " (" + Fore.RED + str(tracks["result"]["songs"][b]["id"]) + Fore.RESET + ")", end=" - ")
             a = ""
             for i in tracks["result"]["songs"][b]["ar"]: # artist
                 print(Fore.YELLOW + i["name"] + Fore.RESET, "(" + Fore.RED + str(i["id"]) + Fore.RESET + ")", end=" ")
@@ -273,16 +275,20 @@ def dl(msc):
         except KeyboardInterrupt:
             exit()
         except:
-            pass
+            print("非正确的数字，请重新输入。")
     # Get the audio info, using the ids from the search.
     url = pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][shinput]["id"])
+    print(url)
     #print(url["data"][0]["url"])
     if not url["data"][0]["url"] is None: # If the song does not require "vip" to be downloaded
+        a = ""
+        for i in tracks["result"]["songs"][shinput]["ar"]: # artist
+            a = a + i["name"] + ", "
         a = a[0:-2]
-        with open("./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + a + ".mp3", "wb") as f:
+        with open("./PLiveMSCdl/" + tracks["result"]["songs"][shinput]["name"] + " - " + a + ".mp3", "wb") as f:
             print("\n正在下载音频文件。。。")    
-            f.write(requests.get((pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][0]["id"])["data"][0]["url"])).content)
-        print("下载成功:", os.getcwd().replace("\\", "/") + "/PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + a + ".mp3")
+            f.write(requests.get((pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][shinput]["id"])["data"][0]["url"])).content)
+        print("下载成功:", os.getcwd().replace("\\", "/") + "/PLiveMSCdl/" + tracks["result"]["songs"][shinput]["name"] + " - " + a + ".mp3")
         
     else:
         print(Fore.RED + "歌曲已下架或需要 VIP。", Fore.RESET)
