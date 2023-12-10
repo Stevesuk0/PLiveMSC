@@ -59,6 +59,16 @@ print(f"{Fore.MAGENTA}LiveMSC {Fore.RESET}(LiveSongs) {version} @Stevesuk0")
 print(f"Running on {Fore.BLUE}{platform.system()}{Fore.YELLOW} {platform.version()} {Fore.RESET}\n")
 print(f"基于 Python {platform.python_version()} 与 PyNCM SDK 构建。")
 
+response = requests.get("https://git.stevesuk.eu.org/https://raw.githubusercontent.com/Stevesuk0/PLiveMSC/master/version")
+if response.text == version:
+    print(f"您当前的 {Fore.MAGENTA}LiveMSC{Fore.RESET} 是最新版本。")
+    print(f"最新版本：{Fore.GREEN}{response.text}{Fore.RESET}")
+    print(f"当前版本：{Fore.GREEN}{version}{Fore.RESET}")
+else:
+    print(f"您当前的 {Fore.MAGENTA}LiveMSC{Fore.RESET} 不是最新版本。")
+    print(f"最新版本：{Fore.GREEN}{response.text}{Fore.RESET}")
+    print(f"当前版本：{Fore.YELLOW}{version}{Fore.RESET}")
+
 launch_mode = 0
 
 if "ncmdl" in sys.argv:
