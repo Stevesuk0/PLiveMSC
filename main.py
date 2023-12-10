@@ -69,14 +69,21 @@ else:
     print(f"最新版本：{Fore.GREEN}{response.text}{Fore.RESET}")
     print(f"当前版本：{Fore.YELLOW}{version}{Fore.RESET}")
 
-launch_mode = 0
+shinput = easygui.choicebox(title="PLiveMSC Launch Menu", msg="选择一项进行启动", choices=["正常启动", "以 歌曲下载 模式启动", "以 配置修改 模式启动", "打开歌曲文件夹"], preselect=0)
 
-if "ncmdl" in sys.argv:
+if shinput == "正常启动":
+    launch_mode = 0
+elif shinput == "以 歌曲下载 模式启动":
     print("\n以" + Fore.GREEN + "歌曲下载" + Fore.RESET + "模式启动。")
     launch_mode = 1
-if "config" in sys.argv:
+elif shinput == "以 配置修改 模式启动":
     print("\n以" + Fore.GREEN + "配置模式" + Fore.RESET + "模式启动。")
     launch_mode = 2
+elif shinput == "打开歌曲文件夹":
+    os.system("start %CD%\\PLiveMSCdl\\")
+    exit()
+else:
+    exit()
 
 latest_user = ""
 latest_message = ""
