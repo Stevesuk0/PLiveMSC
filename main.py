@@ -13,8 +13,15 @@ import easygui
 import win32api
 import processlib
 import traceback
+import bar
 
-version = "1.2.3"
+version = "1.3"
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0 PLiveMSC/' + version,
+}
+
+os.makedirs("PLiveMSCdl", exist_ok=True)
 
 if platform.system() == "Windows":
     win32api.SetConsoleTitle(f"PLiveMSC {version} by @Stevesuk0")
@@ -69,7 +76,7 @@ def recv_danmaku():
     try:
         global latest_message, latest_user, latest_timeline, roomid, return_danmaku
         # Get danmaku
-        response = requests.get(url="https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory?roomid=" + roomid)
+        response = requests.get(url="https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory?roomid=" + roomid, headers=headers)
         danmaku = response.json()["data"]["room"][-1]
         if latest_timeline != danmaku["timeline"]:
             latest_user = danmaku["nickname"]
@@ -89,7 +96,7 @@ def login():
             account = LoginViaAnonymousAccount(userid) # Login to Netease Music.
             break
         except AssertionError:
-            print(f"{Fore.RED}无法使用访客身份 {Fore.RESET}[{Fore.BLUE}{userid}{Fore.RESET}]{Fore.RED} 登录。{Fore.RESET}")
+            print(f"{Fore.RED}无法使用访客身份 {Fore.RESET}[{Fore.BLUE}{userid}{Fore.RESET}]{Fore.RED} 登录，正在重试。{Fore.RESET}")
     if str(account["content"]["code"]) == "200":
         print(Fore.GREEN + "登录成功！" + Fore.RESET + "使用访客身份 [" + Fore.BLUE + userid + Fore.RESET + "] 登录。" + Fore.RESET, end="")
 
@@ -107,10 +114,8 @@ def play(msc):
                 print(Fore.RED + "歌曲已下架或需要 VIP。", Fore.RESET)
                 return 0
             else:
-                content = requests.get((url["data"][0]["url"])).content
-                with open("temp.mp3", "wb") as f:
-                    print("\n正在下载音频文件。。。")    
-                    f.write(content)
+                print("\n正在下载音频文件。。。") 
+                bar.get((url["data"][0]["url"]), "./temp.mp3", "下载中")
                     
                 with open("./PLiveMSCdl/id_" + msc[3:] + ".mp3", "wb") as fa:
                     fa.write(content)
@@ -147,11 +152,10 @@ def play(msc):
         
                     artist = artist[0:-2]
                     content = requests.get((url["data"][0]["url"])).content
-                    with open("temp.mp3", "wb") as f:
-                        print("\n正在下载音频文件。。。")    
-                        f.write(content)
-                    with open("./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + artist + ".mp3", "wb") as fa:
-                        fa.write(content)
+                    print("\n正在下载音频文件。。。") 
+                    bar.get(url["data"][0]["url"], "./temp.mp3", "下载中")
+                    bar.ins(url["data"][0]["url"], "./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + artist + ".mp3")
+
                     print("开始播放：", end="")
                     print(Fore.BLUE + tracks["result"]["songs"][a]["name"] + Fore.RESET, end=" - ")
                     print(Fore.YELLOW + artist + Fore.RESET)
@@ -178,17 +182,10 @@ def play(msc):
                     #print(Fore.YELLOW + i["name"] + Fore.RESET, "(" + Fore.RED + str(i["id"]) + Fore.RESET + ")", end=" ")
                     artist = artist + s["name"] + ", "
                 artist = artist[0:-2]
-                content = requests.get((url["data"][0]["url"])).content
-                with open("temp.mp3", "wb") as f:
-                    print("\n正在下载音频文件。。。")    
-                    f.write(content)
-                    
-                try:
-                    with open("./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + artist + ".mp3", "wb") as fa:
-                        fa.write(content)
-                except:
-                    with open("./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + ".mp3", "wb") as fa:
-                        fa.write(content)
+                print("\n正在下载音频文件。。。") 
+                bar.get(url["data"][0]["url"], "./temp.mp3", "下载中")
+                bar.ins(url["data"][0]["url"], "./PLiveMSCdl/" + tracks["result"]["songs"][0]["name"] + " - " + artist + ".mp3")
+
                 print("开始播放：", end="")
                 print(Fore.BLUE + tracks["result"]["songs"][0]["name"] + Fore.RESET, end=" - ")
                 print(Fore.YELLOW + artist + Fore.RESET)
@@ -278,16 +275,14 @@ def dl(msc):
             print("非正确的数字，请重新输入。")
     # Get the audio info, using the ids from the search.
     url = pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][shinput]["id"])
-    print(url)
     #print(url["data"][0]["url"])
     if not url["data"][0]["url"] is None: # If the song does not require "vip" to be downloaded
         a = ""
         for i in tracks["result"]["songs"][shinput]["ar"]: # artist
             a = a + i["name"] + ", "
         a = a[0:-2]
-        with open("./PLiveMSCdl/" + tracks["result"]["songs"][shinput]["name"] + " - " + a + ".mp3", "wb") as f:
-            print("\n正在下载音频文件。。。")    
-            f.write(requests.get((pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][shinput]["id"])["data"][0]["url"])).content)
+        print("\n正在下载音频文件。。。")    
+        bar.get((pyncm.apis.track.GetTrackAudio(tracks["result"]["songs"][shinput]["id"])["data"][0]["url"]), "./PLiveMSCdl/" + tracks["result"]["songs"][shinput]["name"] + " - " + a + ".mp3", "下载中")
         print("下载成功:", os.getcwd().replace("\\", "/") + "/PLiveMSCdl/" + tracks["result"]["songs"][shinput]["name"] + " - " + a + ".mp3")
         
     else:
@@ -359,10 +354,10 @@ try:
             sys.exit()
     elif launch_mode == 1:
         while True:
+            print("输入歌曲名下载。")
             try:
                 dl(input(">" + Fore.BLUE))
             except Exception as f:
-                print(f)
                 dl(input(">" + Fore.BLUE))
             except KeyboardInterrupt:
                 exit()
